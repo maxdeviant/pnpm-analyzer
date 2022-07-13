@@ -99,5 +99,29 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let first_line = buffer
+        .lines()
+        .filter(|line| looks_like_log_line(line))
+        .next()
+        .and_then(|line| serde_json::from_str::<PnpmLogLine>(line).ok());
+    let last_line = buffer
+        .lines()
+        .filter(|line| looks_like_log_line(line))
+        .last()
+        .and_then(|line| serde_json::from_str::<PnpmLogLine>(line).ok());
+
+    match (first_line, last_line) {
+        (Some(first), Some(last)) => {
+            let duration = last.time - first.time;
+
+            println!(
+                "pnpm install finished in {}s ({}ms)",
+                duration.num_seconds(),
+                duration.num_milliseconds()
+            );
+        }
+        _ => {}
+    }
+
     Ok(())
 }
