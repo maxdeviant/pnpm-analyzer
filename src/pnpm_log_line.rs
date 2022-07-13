@@ -41,6 +41,30 @@ pub enum PnpmLogEvent {
     #[serde(rename = "pnpm:scope")]
     Scope { selected: i32 },
 
+    #[serde(rename = "pnpm:package-manifest")]
+    PackageManifest,
+
+    #[serde(rename = "pnpm:context")]
+    Context,
+
+    #[serde(rename = "pnpm:stage")]
+    Stage,
+
+    #[serde(rename = "pnpm:hook")]
+    Hook,
+
+    #[serde(rename = "pnpm:deprecation")]
+    Deprecation,
+
+    #[serde(rename = "pnpm:stats")]
+    Stats,
+
+    #[serde(rename = "pnpm:package-import-method")]
+    PackageImportMethod,
+
+    #[serde(rename = "pnpm:root")]
+    Root,
+
     #[serde(rename = "pnpm:_dependency_resolved")]
     DependencyResolved,
 
