@@ -11,6 +11,9 @@ pub enum LogLevel {
     Error,
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Deserialize)]
+pub struct PackageId(pub String);
+
 #[derive(Debug, Deserialize)]
 pub struct PnpmLogLine {
     #[serde(with = "ts_milliseconds")]
@@ -66,13 +69,13 @@ pub enum PnpmLogEvent {
     Root,
 
     #[serde(rename = "pnpm:_dependency_resolved")]
-    DependencyResolved,
+    DependencyResolved(PnpmDependencyResolved),
 
     #[serde(rename = "pnpm:progress")]
     Progress,
 
     #[serde(rename = "pnpm:fetching-progress")]
-    FetchingProgress,
+    FetchingProgress(PnpmFetchingProgress),
 
     #[serde(rename = "pnpm:install-check")]
     InstallCheck,
@@ -94,4 +97,26 @@ pub enum PnpmLogEvent {
 
     #[serde(other)]
     Unknown,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct PnpmDependencyResolved {
+    pub resolution: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum PnpmFetchingProgress {
+    #[serde(rename_all = "camelCase")]
+    Started {
+        attempt: i32,
+        package_id: PackageId,
+        size: i32,
+    },
+
+    #[serde(rename_all = "camelCase")]
+    InProgress {
+        package_id: PackageId,
+        downloaded: i32,
+    },
 }
