@@ -101,6 +101,30 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let mut link_lines = buffer
+        .lines()
+        .filter(|line| looks_like_log_line(line))
+        .filter_map(|line| serde_json::from_str::<PnpmLogLine>(line).ok())
+        .filter(|line| match line.event {
+            PnpmLogEvent::Link => true,
+            _ => false,
+        });
+
+    let first_link_line = link_lines.next();
+    let last_link_line = link_lines.last();
+
+    match (first_link_line, last_link_line) {
+        (Some(first), Some(last)) => {
+            let duration = last.time - first.time;
+
+            println!(
+                "pnpm link finished in {}ms",
+                duration.num_milliseconds().to_formatted_string(&Locale::en)
+            );
+        }
+        _ => {}
+    }
+
     let first_line = buffer
         .lines()
         .filter(|line| looks_like_log_line(line))
