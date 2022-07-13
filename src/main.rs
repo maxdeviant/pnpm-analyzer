@@ -7,6 +7,7 @@ use std::io::Read;
 
 use chrono::{DateTime, Utc};
 use clap::Parser;
+use num_format::{Locale, ToFormattedString};
 
 use crate::pnpm_log_line::{PackageId, PnpmFetchingProgress, PnpmLogEvent, PnpmLogLine};
 
@@ -89,10 +90,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         match status.finished_at {
             Some(finished_at) => {
                 println!(
-                    "{:?} finished fetching in {}s ({}ms)",
+                    "{:?} finished fetching in {}ms",
                     package_id,
-                    (finished_at - status.started_at).num_seconds(),
-                    (finished_at - status.started_at).num_milliseconds()
+                    (finished_at - status.started_at)
+                        .num_milliseconds()
+                        .to_formatted_string(&Locale::en)
                 );
             }
             None => {}
@@ -115,9 +117,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             let duration = last.time - first.time;
 
             println!(
-                "pnpm install finished in {}s ({}ms)",
-                duration.num_seconds(),
-                duration.num_milliseconds()
+                "pnpm install finished in {}ms",
+                duration.num_milliseconds().to_formatted_string(&Locale::en)
             );
         }
         _ => {}
