@@ -101,6 +101,57 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    let mut dependency_resolution_lines = buffer
+        .lines()
+        .filter(|line| looks_like_log_line(line))
+        .filter_map(|line| serde_json::from_str::<PnpmLogLine>(line).ok())
+        .filter(|line| match line.event {
+            PnpmLogEvent::DependencyResolved(_) => true,
+            _ => false,
+        });
+
+    let first_dependency_resolution_line = dependency_resolution_lines.next();
+    let last_dependency_resolution_line = dependency_resolution_lines.last();
+
+    match (
+        first_dependency_resolution_line,
+        last_dependency_resolution_line,
+    ) {
+        (Some(first), Some(last)) => {
+            let duration = last.time - first.time;
+
+            println!(
+                "pnpm dependency resolution finished in {}ms",
+                duration.num_milliseconds().to_formatted_string(&Locale::en)
+            );
+        }
+        _ => {}
+    }
+
+    let mut hook_lines = buffer
+        .lines()
+        .filter(|line| looks_like_log_line(line))
+        .filter_map(|line| serde_json::from_str::<PnpmLogLine>(line).ok())
+        .filter(|line| match line.event {
+            PnpmLogEvent::Hook => true,
+            _ => false,
+        });
+
+    let first_hook_line = hook_lines.next();
+    let last_hook_line = hook_lines.last();
+
+    match (first_hook_line, last_hook_line) {
+        (Some(first), Some(last)) => {
+            let duration = last.time - first.time;
+
+            println!(
+                "pnpm hook finished in {}ms",
+                duration.num_milliseconds().to_formatted_string(&Locale::en)
+            );
+        }
+        _ => {}
+    }
+
     let mut link_lines = buffer
         .lines()
         .filter(|line| looks_like_log_line(line))
@@ -119,6 +170,30 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             println!(
                 "pnpm link finished in {}ms",
+                duration.num_milliseconds().to_formatted_string(&Locale::en)
+            );
+        }
+        _ => {}
+    }
+
+    let mut lifecycle_lines = buffer
+        .lines()
+        .filter(|line| looks_like_log_line(line))
+        .filter_map(|line| serde_json::from_str::<PnpmLogLine>(line).ok())
+        .filter(|line| match line.event {
+            PnpmLogEvent::Lifecycle => true,
+            _ => false,
+        });
+
+    let first_lifecycle_line = lifecycle_lines.next();
+    let last_lifecycle_line = lifecycle_lines.last();
+
+    match (first_lifecycle_line, last_lifecycle_line) {
+        (Some(first), Some(last)) => {
+            let duration = last.time - first.time;
+
+            println!(
+                "pnpm lifecycle finished in {}ms",
                 duration.num_milliseconds().to_formatted_string(&Locale::en)
             );
         }
