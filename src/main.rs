@@ -7,6 +7,7 @@ use std::io::Read;
 
 use chrono::{DateTime, Utc};
 use clap::Parser;
+use itertools::Itertools;
 use num_format::{Locale, ToFormattedString};
 
 use crate::pnpm_log_line::{PackageId, PnpmFetchingProgress, PnpmLogEvent, PnpmLogLine};
@@ -99,6 +100,37 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             None => {}
         }
+    }
+
+    let mut last_max = 0_i64;
+    let mut max_pair: Option<(PnpmLogLine, PnpmLogLine)> = None;
+
+    for (prev, next) in buffer
+        .lines()
+        .filter(|line| looks_like_log_line(line))
+        .tuple_windows()
+    {
+        let prev = serde_json::from_str::<PnpmLogLine>(prev)?;
+        let next = serde_json::from_str::<PnpmLogLine>(next)?;
+
+        let gap = (next.time - prev.time).num_milliseconds();
+
+        if gap > last_max {
+            last_max = gap;
+            max_pair = Some((prev, next));
+        }
+    }
+
+    match max_pair {
+        Some((prev, next)) => {
+            println!(
+                "Max time between events: {}ms",
+                last_max.to_formatted_string(&Locale::en)
+            );
+            println!("Event A: {:?}", prev);
+            println!("Event B: {:?}", next);
+        }
+        None => {}
     }
 
     let mut dependency_resolution_lines = buffer
